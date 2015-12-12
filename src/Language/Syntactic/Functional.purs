@@ -7,7 +7,10 @@ import Control.Monad.Cont.Trans
 import Data.Exists
 import Data.Identity
 import Data.Inject
+import Data.Either
+import Data.Functor.Coproduct
 import Type.Proxy
+import Unsafe.Coerce
 
 newtype Name = Name Int
 
@@ -80,3 +83,24 @@ instance monadRemon :: Monad (Remon sym m)
 
 desugarMonad :: forall sym m a. (Inject (MONAD m) sym) => Remon sym m (ASTF sym a) -> ASTF sym (m a)
 desugarMonad a = runIdentity (runContT (unRemon a) (\x -> return $ mReturn x))
+
+class Denotation a b
+
+instance partialDenotation :: (Denotation b c) => Denotation (Partial a b) (a -> c)
+
+instance fullDenotation :: Denotation (Full a) a
+
+class Eval s where
+  evalSym :: forall sig sig2. (Denotation sig sig2) => s sig -> sig2
+
+instance evalCoproduct :: (Eval s, Eval t) => Eval (Coproduct s t) where
+  evalSym (Coproduct a) = either evalSym evalSym a
+
+evalDen :: forall s sig sig2. (Denotation sig sig2, Eval s) => AST s sig -> sig2
+evalDen = go
+  where
+    go :: (Denotation sig sig2, Eval s) => AST s sig -> sig2
+    go (Sym s) = evalSym s
+    go (Ap apData) = runExists
+      (\(ApDataF s a) -> unsafeCoerce (go (unsafeCoerce s)) $ (go (unsafeCoerce a)))
+      apData
