@@ -51,15 +51,6 @@ divide' :: forall dom. (Inject Math dom)
         -> AST dom Number
 divide' a b = inj Divide :$ a :$ b    
 
-{-
-evalMath :: forall a. Math a -> a
-evalMath (Lit a) = unsafeCoerce $ a
-evalMath Add = unsafeCoerce $ (+) :: Number -> Number -> Number
-evalMath Sub = unsafeCoerce $ (-) :: Number -> Number -> Number
-evalMath Times = unsafeCoerce $ (*) :: Number -> Number -> Number
-evalMath Divide = unsafeCoerce $ (/) :: Number -> Number -> Number
--}
-
 instance evalMath :: Eval Math where
   eval (Lit a) = unsafeCoerce $ a
   eval Add = unsafeCoerce $ (+) :: Number -> Number -> Number
