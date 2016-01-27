@@ -11,23 +11,11 @@ data AST sym sig
 
 infixl 1 :$
 
-(:$) :: forall sym sig a. AST sym (Partial a sig) -> AST sym (Full a) -> AST sym sig
+(:$) :: forall sym sig a. AST sym (a -> sig) -> AST sym a -> AST sym sig
 (:$) a b = Ap $ mkExists $ ApDataF a b
 
-data ApDataF sym sig a = ApDataF (AST sym (Partial a sig)) (AST sym (Full a))
+data ApDataF sym sig a = ApDataF (AST sym (a -> sig)) (AST sym a)
 type ApData sym sig = Exists (ApDataF sym sig)
-
-type ASTF sym a = AST sym (Full a)
-
-newtype Full a = Full a
-
-instance functorFull :: Functor Full where
-  map f (Full a) = Full (f a)
-
-newtype Partial a sig = Partial (a -> sig)
-
-instance functorPartial :: Functor (Partial x) where
-  map f (Partial f') = Partial (f <<< f')
 
 instance functorAST :: (Functor sym) => Functor (AST sym) where
   map f (Sym s) = Sym (map f s)
